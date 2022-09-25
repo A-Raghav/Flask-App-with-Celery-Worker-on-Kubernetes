@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    image: web
+    container_name: web_container
+    ports:
+      - "5000:5000"
+    # command: python flask_app.py

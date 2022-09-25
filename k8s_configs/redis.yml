@@ -1,0 +1,47 @@
+# deploy
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-deploy
+  namespace: my-app
+  labels:
+    name: redis-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: redis-deploy
+  template:
+    metadata:
+      labels:
+        name: redis-deploy
+    spec:
+      containers:
+        - image: redis:6.2-alpine
+          name: redis-deploy
+          ports:
+            - containerPort: 6379
+              name: redis-deploy
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+---
+# service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-deploy
+  namespace: my-app
+  labels:
+    name: redis-deploy
+spec:
+  ports:
+    - protocol: TCP
+      port: 6379
+  type: LoadBalancer
+  selector:
+    name: redis-deploy

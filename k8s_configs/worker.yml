@@ -1,0 +1,34 @@
+# deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-worker
+  namespace: my-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: celery-worker
+  template:
+    metadata:
+      labels:
+        name: celery-worker
+    spec:
+      containers:
+        - name: celery-worker
+          image: web:latest # TODO: add image name
+          imagePullPolicy: Never
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "1000m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+          command:
+            - "bash"
+            - "-c"
+            - "celery -A tasks worker --pool=solo --loglevel=INFO"
+          envFrom:
+            - secretRef:
+                name: flask-secret

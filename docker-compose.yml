@@ -1,0 +1,47 @@
+version: '3'
+
+services:
+  redis:
+    image: redis:6.2-alpine
+    hostname: redis
+    restart: always
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis:/data
+    networks:
+      - flask_celery_network
+
+  worker:
+    build:
+      context: .
+    image: worker
+    hostname: worker
+    command: celery -A tasks worker --pool=solo --loglevel=INFO
+    links:
+      - redis
+    depends_on:
+      - redis
+    networks:
+      - flask_celery_network
+
+  web:
+    build: .
+    image: web
+    container_name: web_container
+    ports:
+      - "5000:5000"
+    command: python flask_app.py
+    depends_on:
+      - redis
+      - worker
+    networks:
+      - flask_celery_network
+
+volumes:
+  redis:
+    driver: local
+
+networks:
+  flask_celery_network:
+    name: flask_celery_network

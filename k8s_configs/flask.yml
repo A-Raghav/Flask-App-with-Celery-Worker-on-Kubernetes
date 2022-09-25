@@ -1,0 +1,55 @@
+# secret
+apiVersion: v1
+kind: Secret
+metadata:
+  name: flask-secret
+  namespace: my-app
+type: Opaque
+data:
+  CELERY_BROKER_URL: cmVkaXM6Ly9yZWRpcy1kZXBsb3kubXktYXBwOjYzNzkvMA== # redis://redis-deploy.my-app:6379/0
+  CELERY_RESULT_BACKEND: cmVkaXM6Ly9yZWRpcy1kZXBsb3kubXktYXBwOjYzNzkvMQ== # redis://redis-deploy.my-app:6379/1
+---
+# deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-server
+  namespace: my-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: flask-server
+  template:
+    metadata:
+      labels:
+        name: flask-server
+    spec:
+      containers:
+        - name: flask-server
+          image: web:latest # TODO: add local image name
+          imagePullPolicy: Never
+          envFrom:
+            - secretRef:
+                name: flask-secret
+          ports:
+            - containerPort: 5000
+              name: rest
+          command:
+            - "bash"
+            - "-c"
+            - "python flask_app.py"
+---
+# service
+apiVersion: v1
+kind: Service
+metadata:
+  name: flask-server
+  namespace: my-app
+spec:
+  selector:
+    name: flask-server
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 5000
